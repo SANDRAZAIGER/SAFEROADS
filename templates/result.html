@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SafeRoads - תוצאות תחזית חומרת תאונה">
+    <meta name="theme-color" content="#2563eb">
+    <title>SafeRoads - תוצאות החיזוי</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .results-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .result-card {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        .prediction {
+            text-align: center;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        }
+        .prediction-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 1.5rem 0;
+            color: var(--primary-color);
+        }
+        .prediction-probabilities {
+            margin-top: 2rem;
+        }
+        .prob-item {
+            margin: 1rem 0;
+        }
+        .prob-bar {
+            background: var(--primary-color);
+            height: 2rem;
+            border-radius: 1rem;
+            position: relative;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+            font-size: 0.9rem;
+            transition: width 0.5s ease-out;
+        }
+        .prob-bar[data-severity="light"] {
+            background: #10b981;
+        }
+        .prob-bar[data-severity="severe"] {
+            background: #f59e0b;
+        }
+        .prob-bar[data-severity="fatal"] {
+            background: #ef4444;
+        }
+        .confusion-matrix {
+            overflow-x: auto;
+        }
+        .confusion-matrix table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .confusion-matrix th,
+        .confusion-matrix td {
+            padding: 0.75rem;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+        .confusion-matrix th {
+            background: var(--surface-color);
+            font-weight: 500;
+        }
+        .confusion-matrix td.correct {
+            background: rgba(16, 185, 129, 0.1);
+            font-weight: bold;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .metric {
+            text-align: center;
+            padding: 1rem;
+            background: var(--surface-color);
+            border-radius: var(--border-radius);
+        }
+        .metric-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .visualization {
+            min-height: 300px;
+        }
+        .actions {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        .action-button, .back-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+        .action-button {
+            background: var(--primary-color);
+            color: white;
+        }
+        .back-button {
+            background: var(--surface-color);
+            color: var(--text-primary);
+        }
+        .action-button:hover, .back-button:hover {
+            transform: translateY(-2px);
+        }
+        .button-icon {
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="results-container">
+        <header>
+            <h1>תוצאות החיזוי</h1>
+            <p class="subtitle">ניתוח חומרת התאונה על פי הנתונים שהוזנו</p>
+        </header>
+
+        <main>
+            <div class="results-grid">
+                <!-- Prediction Result -->
+                <div class="result-card prediction">
+                    <h2>תוצאת החיזוי</h2>
+                    <div class="prediction-value">
+                        {{ prediction_text }}
+                    </div>
+                    <div class="prediction-probabilities">
+                        <div class="prob-item">
+                            <div class="prob-bar" data-severity="light" style="width: {{ prob_kala }}%">
+                                <span class="prob-label">קלה</span>
+                                <span class="prob-value">{{ "%.1f"|format(prob_kala) }}%</span>
+                            </div>
+                        </div>
+                        <div class="prob-item">
+                            <div class="prob-bar" data-severity="severe" style="width: {{ prob_kashe }}%">
+                                <span class="prob-label">קשה</span>
+                                <span class="prob-value">{{ "%.1f"|format(prob_kashe) }}%</span>
+                            </div>
+                        </div>
+                        <div class="prob-item">
+                            <div class="prob-bar" data-severity="fatal" style="width: {{ prob_katlani }}%">
+                                <span class="prob-label">קטלנית</span>
+                                <span class="prob-value">{{ "%.1f"|format(prob_katlani) }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model Metrics -->
+                <div class="result-card metrics">
+                    <h2>מדדי הערכה</h2>
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">דיוק (Accuracy)</span>
+                            <span class="metric-value">{{ "%.1f"|format(accuracy * 100) }}%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">דיוק (Precision)</span>
+                            <span class="metric-value">{{ "%.1f"|format(precision * 100) }}%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">רגישות (Recall)</span>
+                            <span class="metric-value">{{ "%.1f"|format(recall * 100) }}%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">F1 Score</span>
+                            <span class="metric-value">{{ "%.1f"|format(f1_score * 100) }}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="result-card recommendations">
+                    <h2>המלצות בטיחות</h2>
+                    <div class="recommendations-list">
+                        {% if recommendations %}
+                            {% for rec in recommendations %}
+                                <div class="recommendation-item {{ rec.type }}">
+                                    <div class="recommendation-icon">
+                                        {% if rec.type == 'high_severity' %}🚨
+                                        {% elif rec.type == 'infrastructure' %}🚧
+                                        {% elif rec.type == 'signage' %}🚸
+                                        {% elif rec.type == 'lighting' %}💡
+                                        {% elif rec.type == 'prediction_based' %}⚠️
+                                        {% endif %}
+                                    </div>
+                                    <div class="recommendation-text">
+                                        {{ rec.text }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="no-recommendations">
+                                לא נמצאו המלצות ספציפיות לתנאים שהוזנו
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Confusion Matrix -->
+                <div class="result-card matrix">
+                    <h2>מטריצת בלבול</h2>
+                    <div class="confusion-matrix">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>חזוי: קל</th>
+                                    <th>חזוי: בינוני</th>
+                                    <th>חזוי: קשה</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th>אמיתי: קל</th>
+                                    <td class="correct">{{ confusion_matrix[0][0] }}</td>
+                                    <td>{{ confusion_matrix[0][1] }}</td>
+                                    <td>{{ confusion_matrix[0][2] }}</td>
+                                </tr>
+                                <tr>
+                                    <th>אמיתי: בינוני</th>
+                                    <td>{{ confusion_matrix[1][0] }}</td>
+                                    <td class="correct">{{ confusion_matrix[1][1] }}</td>
+                                    <td>{{ confusion_matrix[1][2] }}</td>
+                                </tr>
+                                <tr>
+                                    <th>אמיתי: קשה</th>
+                                    <td>{{ confusion_matrix[2][0] }}</td>
+                                    <td>{{ confusion_matrix[2][1] }}</td>
+                                    <td class="correct">{{ confusion_matrix[2][2] }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a href="/map?district={{ district }}&prediction={{ prediction }}" class="action-button">
+                    <span class="button-icon">🗺️</span>
+                    <span class="button-text">צפה במפת תאונות</span>
+                </a>
+                <a href="/" class="back-button">
+                    <span class="button-icon">←</span>
+                    <span class="button-text">חזרה לדף הבית</span>
+                </a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SafeRoads - חיזוי וניתוח תאונות דרכים">
+    <meta name="theme-color" content="#2563eb">
+    <title>SafeRoads - דף הבית</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <style>
+        .home-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            background: var(--background-color);
+        }
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .hero h1 {
+            font-size: 3rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            transition: transform 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+        .feature-title {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        .feature-description {
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="home-container">
+        <div class="hero">
+            <h1>ברוכים הבאים ל-SafeRoads</h1>
+            <p>מערכת חכמה לחיזוי וניתוח תאונות דרכים בישראל</p>
+        </div>
+
+        <div class="features-grid">
+            <a href="/predict" class="feature-card">
+                <div class="feature-icon">🔮</div>
+                <h2 class="feature-title">חיזוי תאונות</h2>
+                <p class="feature-description">
+                    הזן נתונים אודות תנאי הדרך והסביבה לקבלת חיזוי לגבי חומרת תאונה פוטנציאלית
+                </p>
+            </a>
+
+            <a href="/map" class="feature-card">
+                <div class="feature-icon">🗺️</div>
+                <h2 class="feature-title">מפת תאונות</h2>
+                <p class="feature-description">
+                    צפה במפה אינטראקטיבית המציגה את פיזור התאונות ברחבי הארץ
+                </p>
+            </a>
+
+            <a href="/dashboard" class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h2 class="feature-title">דשבורד נתונים</h2>
+                <p class="feature-description">
+                    נתח מגמות ותובנות מתוך נתוני התאונות באמצעות גרפים אינטראקטיביים
+                </p>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

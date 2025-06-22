@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SafeRoads - ניתוח נתוני תאונות דרכים">
+    <meta name="theme-color" content="#2563eb">
+    <title>SafeRoads - דשבורד נתונים</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .dashboard-container {
+            padding: 2rem;
+            max-width: 2000px;
+            margin: 0 auto;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .chart-container {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chart-title {
+            font-size: 1.4rem;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+        }
+        .chart-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0.5rem 0;
+        }
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .filter-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        .filter-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1>דשבורד נתוני תאונות דרכים</h1>
+            <p class="subtitle">ניתוח וויזואליזציה של נתוני תאונות דרכים בישראל</p>
+        </header>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="yearFilter">שנה</label>
+                <select id="yearFilter">
+                    <option value="">כל השנים</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="severityFilter">חומרת תאונה</label>
+                <select id="severityFilter">
+                    <option value="">הכל</option>
+                    <option value="1">קטלנית</option>
+                    <option value="2">קשה</option>
+                    <option value="3">קלה</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="timeFilter">יום/לילה</label>
+                <select id="timeFilter">
+                    <option value="">הכל</option>
+                    <option value="1">יום</option>
+                    <option value="2">לילה</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalAccidents">0</div>
+                <div class="stat-label">סה"כ תאונות</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="fatalAccidents">0</div>
+                <div class="stat-label">תאונות קטלניות</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="severeAccidents">0</div>
+                <div class="stat-label">תאונות קשות</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="lightAccidents">0</div>
+                <div class="stat-label">תאונות קלות</div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="chart-container">
+                <h3 class="chart-title">התפלגות תאונות לפי חומרה</h3>
+                <div class="chart-wrapper">
+                    <canvas id="severityChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">מגמת תאונות לאורך זמן</h3>
+                <div class="chart-wrapper">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">התפלגות תאונות לפי ימי השבוע</h3>
+                <div class="chart-wrapper">
+                    <canvas id="weekdayChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">השוואת תאונות יום/לילה</h3>
+                <div class="chart-wrapper">
+                    <canvas id="dayNightChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">התפלגות תאונות לפי סוג דרך</h3>
+                <div class="chart-wrapper">
+                    <canvas id="roadTypeChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">התפלגות תאונות לפי מהירות מותרת</h3>
+                <div class="chart-wrapper">
+                    <canvas id="speedChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">התפלגות תאונות לפי תחזוקת הכביש</h3>
+                <div class="chart-wrapper">
+                    <canvas id="roadConditionChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">התפלגות תאונות לפי תאורה</h3>
+                <div class="chart-wrapper">
+                    <canvas id="lightingChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">התפלגות תאונות לפי פני הכביש</h3>
+                <div class="chart-wrapper">
+                    <canvas id="roadSurfaceChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">התפלגות תאונות לפי סוג תאונה</h3>
+                <div class="chart-wrapper">
+                    <canvas id="accidentTypeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions" style="margin-top: 2rem;">
+            <a href="/" class="back-button">
+                <span class="button-icon">←</span>
+                <span class="button-text">חזרה לדף הבית</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // משתנים גלובליים
+        let allData = [];
+        let charts = {};
+
+        // צבעים לגרפים
+        const colors = {
+            fatal: '#ef4444',
+            severe: '#f59e0b',
+            light: '#10b981',
+            primary: '#2563eb',
+            secondary: '#6b7280'
+        };
+
+        // מיפוי ימי השבוע
+        const weekdayNames = ['', 'ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
+        // מיפוי חודשים
+        const monthNames = ['', 'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 
+                           'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+
+        // עדכון סטטיסטיקות
+        function updateStats(data) {
+            document.getElementById('totalAccidents').textContent = data.length;
+            document.getElementById('fatalAccidents').textContent = data.filter(a => a.humrat_teuna === 1).length;
+            document.getElementById('severeAccidents').textContent = data.filter(a => a.humrat_teuna === 2).length;
+            document.getElementById('lightAccidents').textContent = data.filter(a => a.humrat_teuna === 3).length;
+        }
+
+        // קבלת נתונים מסוננים
+        function getFilteredData() {
+            const year = document.getElementById('yearFilter').value;
+            const severity = document.getElementById('severityFilter').value;
+            const time = document.getElementById('timeFilter').value;
+
+            let filteredData = allData;
+            
+            if (year) {
+                filteredData = filteredData.filter(a => a.shnat_teuna == year);
+            }
+            if (severity) {
+                filteredData = filteredData.filter(a => a.humrat_teuna == severity);
+            }
+            if (time) {
+                // המרת ערך הפילטר לערך המתאים ב-JSON
+                const timeValue = time === '1' ? 1 : 5; // 1=יום, 5=לילה
+                filteredData = filteredData.filter(a => a.yom_layla == timeValue);
+            }
+
+            return filteredData;
+        }
+
+        // יצירת גרף חומרת תאונות
+        function createSeverityChart(data) {
+            const ctx = document.getElementById('severityChart').getContext('2d');
+            
+            if (charts.severity) {
+                charts.severity.destroy();
+            }
+
+            const severityCounts = {1: 0, 2: 0, 3: 0};
+            data.forEach(accident => {
+                const severity = accident.humrat_teuna;
+                if (severityCounts.hasOwnProperty(severity)) {
+                    severityCounts[severity]++;
+                }
+            });
+
+            charts.severity = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['קטלניות', 'קשות', 'קלות'],
+                    datasets: [{
+                        data: [severityCounts[1], severityCounts[2], severityCounts[3]],
+                        backgroundColor: [colors.fatal, colors.severe, colors.light]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // יצירת גרף מגמה לאורך זמן
+        function createTrendChart(data) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            if (charts.trend) {
+                charts.trend.destroy();
+            }
+
+            // קיבוץ לפי שנה וחודש
+            const monthlyData = {};
+            data.forEach(accident => {
+                const key = `${accident.shnat_teuna}-${accident.hodesh_teuna.toString().padStart(2, '0')}`;
+                monthlyData[key] = (monthlyData[key] || 0) + 1;
+            });
+
+            const sortedKeys = Object.keys(monthlyData).sort();
+            const labels = sortedKeys.map(key => {
+                const [year, month] = key.split('-');
+                return `${monthNames[parseInt(month)]} ${year}`;
+            });
+            const values = sortedKeys.map(key => monthlyData[key]);
+
+            charts.trend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'מספר תאונות',
+                        data: values,
+                        borderColor: colors.primary,
+                        backgroundColor: colors.primary + '20',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // יצירת גרף ימי השבוע
+        function createWeekdayChart(data) {
+            const ctx = document.getElementById('weekdayChart').getContext('2d');
+            
+            if (charts.weekday) {
+                charts.weekday.destroy();
+            }
+
+            const weekdayCounts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0};
+            data.forEach(accident => {
+                const day = accident.yom_bashavua;
+                if (weekdayCounts.hasOwnProperty(day)) {
+                    weekdayCounts[day]++;
+                }
+            });
+
+            charts.weekday = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(weekdayCounts).map(day => weekdayNames[day]),
+                    datasets: [{
+                        label: 'מספר תאונות',
+                        data: Object.values(weekdayCounts),
+                        backgroundColor: colors.primary
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // יצירת גרף יום/לילה
+        function createDayNightChart(data) {
+            const ctx = document.getElementById('dayNightChart').getContext('2d');
+            
+            if (charts.dayNight) {
+                charts.dayNight.destroy();
+            }
+
+            const dayNightCounts = {1: 0, 5: 0}; // 1=יום, 5=לילה
+            data.forEach(accident => {
+                const timeOfDay = accident.yom_layla;
+                if (dayNightCounts.hasOwnProperty(timeOfDay)) {
+                    dayNightCounts[timeOfDay]++;
+                }
+            });
+
+            charts.dayNight = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['יום', 'לילה'],
+                    datasets: [{
+                        data: [dayNightCounts[1], dayNightCounts[5]],
+                        backgroundColor: ['#fbbf24', '#1e293b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // מיפוי מזג אוויר
+        const weatherMapping = {
+            1: 'בהיר',
+            2: 'מעונן',
+            3: 'גשום',
+            4: 'שלג/ברד',
+            5: 'ערפל',
+            6: 'רוח חזקה',
+            7: 'אחר'
+        };
+
+        // מיפוי סוג דרך (sug_dereh)
+        const roadTypeMapping = {
+            1: 'כביש מהיר',
+            2: 'כביש בינעירוני',
+            3: 'כביש עירוני ראשי',
+            4: 'כביש עירוני משני',
+            5: 'דרך עפר',
+            9: 'לא ידוע'
+        };
+
+        // יצירת גרף מזג אוויר
+        function createWeatherChart(data) {
+            const ctx = document.getElementById('weatherChart').getContext('2d');
+            
+            if (charts.weather) {
+                charts.weather.destroy();
+            }
+
+            const weatherCounts = {};
+            data.forEach(accident => {
+                const weather = accident.mezeg_avir;
+                if (weather) {
+                    weatherCounts[weather] = (weatherCounts[weather] || 0) + 1;
+                }
+            });
+
+            const labels = Object.keys(weatherCounts).map(key => weatherMapping[key] || 'לא ידוע');
+            const values = Object.values(weatherCounts);
+
+            charts.weather = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'מספר תאונות',
+                        data: values,
+                        backgroundColor: colors.primary
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // יצירת גרף סוג דרך
+        function createRoadTypeChart(data) {
+            const ctx = document.getElementById('roadTypeChart').getContext('2d');
+            
+            if (charts.roadType) {
+                charts.roadType.destroy();
+            }
+
+            const roadTypeCounts = {};
+            data.forEach(accident => {
+                const roadType = accident.sug_dereh;
+                if (roadType) {
+                    roadTypeCounts[roadType] = (roadTypeCounts[roadType] || 0) + 1;
+                }
+            });
+
+            const labels = Object.keys(roadTypeCounts).map(key => roadTypeMapping[key] || 'לא ידוע');
+            const values = Object.values(roadTypeCounts);
+
+            charts.roadType = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: [
+                            colors.primary,
+                            colors.secondary,
+                            colors.fatal,
+                            colors.severe
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // מיפוי מהירות מותרת
+        const speedMapping = {
+            1: '30 קמ\"ש',
+            2: '50 קמ\"ש',
+            3: '60 קמ\"ש',
+            4: '70 קמ\"ש',
+            5: '80 קמ\"ש',
+            6: '90 קמ\"ש',
+            7: '100 קמ\"ש',
+            8: '110 קמ\"ש',
+            9: '120 קמ\"ש',
+            99: 'לא ידוע'
+        };
+
+        // מיפוי תחזוקת כביש (tkinut)
+        const roadConditionMapping = {
+            1: 'תקול',
+            2: 'תקין',
+            99: 'לא ידוע'
+        };
+
+        // מיפוי תאורה (teura)
+        const lightingMapping = {
+            1: 'יום',
+            2: 'בין ערביים / עם דמדומים',
+            3: 'לילה תאורת רחוב דולקת',
+            4: 'לילה תאורת רחוב כבויה',
+            5: 'לילה אין תאורת רחוב',
+            99: 'לא ידוע'
+        };
+
+        // מיפוי פני כביש (pne_kvish)
+        const roadSurfaceMapping = {
+            1: 'יבש',
+            2: 'רטוב',
+            3: 'בוץ',
+            4: 'חול',
+            5: 'מים עומדים',
+            6: 'שמן',
+            7: 'דלק',
+            8: 'אחר',
+            99: 'לא ידוע'
+        };
+
+        // מיפוי סוג תאונה (sug_teuna)
+        const accidentTypeMapping = {
+            1: 'התנגשות חזית\-צד',
+            2: 'התנגשות חזית\-אחור',
+            3: 'התנגשות חזית\-חזית',
+            4: 'התנגשות צד בצד',
+            5: 'התנגשות עם רכב חונה\/עומד',
+            6: 'החלקה',
+            7: 'התהפכות',
+            8: 'פגיעה בהולך רגל',
+            9: 'התנגשות עם עצם\/בלימה פתאומית',
+            10: 'אחר',
+            99: 'לא ידוע'
+        };
+
+        // יצירת גרף תחזוקת כביש
+        function createRoadConditionChart(data) {
+            const ctx = document.getElementById('roadConditionChart').getContext('2d');
+            
+            if (charts.roadCondition) {
+                charts.roadCondition.destroy();
+            }
+
+            const conditionCounts = {};
+            data.forEach(accident => {
+                const condition = parseInt(accident.tkinut); // ננסה להמיר למספר שלם
+                if (isNaN(condition) || !roadConditionMapping.hasOwnProperty(condition)) {
+                    conditionCounts[99] = (conditionCounts[99] || 0) + 1; // קבץ את כל הלא ידוע תחת 99
+                } else {
+                    conditionCounts[condition] = (conditionCounts[condition] || 0) + 1;
+                }
+            });
+
+            // מיון הקטגוריות לפי מספר התאונות
+            const sortedCategories = Object.entries(conditionCounts)
+                .sort(([,a], [,b]) => b - a)
+                .filter(([key, value]) => value > 0); 
+
+            const labels = sortedCategories.map(([key]) => roadConditionMapping[key] || 'לא ידוע');
+            const values = sortedCategories.map(([,value]) => value);
+
+            charts.roadCondition = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'מספר תאונות',
+                        data: values,
+                        backgroundColor: [
+                            colors.light,
+                            colors.primary,
+                            colors.severe,
+                            colors.fatal,
+                            colors.secondary
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // יצירת גרף תאורה
+        function createLightingChart(data) {
+            const ctx = document.getElementById('lightingChart').getContext('2d');
+            
+            if (charts.lighting) {
+                charts.lighting.destroy();
+            }
+
+            const lightingCounts = {};
+            data.forEach(accident => {
+                const lighting = parseInt(accident.teura); // ננסה להמיר למספר שלם
+                if (isNaN(lighting) || !lightingMapping.hasOwnProperty(lighting)) {
+                    lightingCounts[99] = (lightingCounts[99] || 0) + 1; // קבץ את כל הלא ידוע תחת 99
+                } else {
+                    lightingCounts[lighting] = (lightingCounts[lighting] || 0) + 1;
+                }
+            });
+
+            // מיון הקטגוריות לפי מספר התאונות
+            const sortedCategories = Object.entries(lightingCounts)
+                .sort(([,a], [,b]) => b - a)
+                .filter(([key, value]) => value > 0); 
+
+            const labels = sortedCategories.map(([key]) => lightingMapping[key] || 'לא ידוע');
+            const values = sortedCategories.map(([,value]) => value);
+
+            charts.lighting = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: [
+                            colors.light,
+                            colors.primary,
+                            colors.fatal,
+                            colors.severe,
+                            colors.secondary
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // יצירת גרף פני כביש
+        function createRoadSurfaceChart(data) {
+            const ctx = document.getElementById('roadSurfaceChart').getContext('2d');
+            
+            if (charts.roadSurface) {
+                charts.roadSurface.destroy();
+            }
+
+            const surfaceCounts = {};
+            data.forEach(accident => {
+                const surface = parseInt(accident.pne_kvish); // ננסה להמיר למספר שלם
+                if (isNaN(surface) || !roadSurfaceMapping.hasOwnProperty(surface)) {
+                    surfaceCounts[99] = (surfaceCounts[99] || 0) + 1; // קבץ את כל הלא ידוע תחת 99
+                } else {
+                    surfaceCounts[surface] = (surfaceCounts[surface] || 0) + 1;
+                }
+            });
+
+            // מיון הקטגוריות לפי מספר התאונות
+            const sortedCategories = Object.entries(surfaceCounts)
+                .sort(([,a], [,b]) => b - a)
+                .filter(([key, value]) => value > 0); 
+
+            const labels = sortedCategories.map(([key]) => roadSurfaceMapping[key] || 'לא ידוע');
+            const values = sortedCategories.map(([,value]) => value);
+
+            charts.roadSurface = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: [
+                            colors.light,
+                            colors.primary,
+                            colors.fatal,
+                            colors.severe,
+                            colors.secondary
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // יצירת גרף מהירות מותרת
+        function createSpeedChart(data) {
+            const ctx = document.getElementById('speedChart').getContext('2d');
+            
+            if (charts.speed) {
+                charts.speed.destroy();
+            }
+
+            const speedCounts = {};
+            data.forEach(accident => {
+                const speed = parseInt(accident.mehirut_muteret); // ננסה להמיר למספר שלם
+                if (isNaN(speed) || !speedMapping.hasOwnProperty(speed)) {
+                    speedCounts[99] = (speedCounts[99] || 0) + 1; // קבץ את כל הלא ידוע תחת 99
+                } else {
+                    speedCounts[speed] = (speedCounts[speed] || 0) + 1;
+                }
+            });
+
+            const sortedCategories = Object.entries(speedCounts)
+                .sort(([,a], [,b]) => b - a)
+                .filter(([key, value]) => value > 0); 
+
+            const labels = sortedCategories.map(([key]) => speedMapping[key] || 'לא ידוע');
+            const values = sortedCategories.map(([,value]) => value);
+
+            charts.speed = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'מספר תאונות',
+                        data: values,
+                        backgroundColor: colors.primary
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // יצירת גרף סוג תאונה
+        function createAccidentTypeChart(data) {
+            const ctx = document.getElementById('accidentTypeChart').getContext('2d');
+            
+            if (charts.accidentType) {
+                charts.accidentType.destroy();
+            }
+
+            const accidentTypeCounts = {};
+            data.forEach(accident => {
+                const type = parseInt(accident.sug_teuna); // ננסה להמיר למספר שלם
+                if (isNaN(type) || !accidentTypeMapping.hasOwnProperty(type)) {
+                    accidentTypeCounts[99] = (accidentTypeCounts[99] || 0) + 1; // קבץ את כל הלא ידוע תחת 99
+                } else {
+                    accidentTypeCounts[type] = (accidentTypeCounts[type] || 0) + 1;
+                }
+            });
+
+            const sortedCategories = Object.entries(accidentTypeCounts)
+                .sort(([,a], [,b]) => b - a)
+                .filter(([key, value]) => value > 0); 
+
+            const labels = sortedCategories.map(([key]) => accidentTypeMapping[key] || 'לא ידוע');
+            const values = sortedCategories.map(([,value]) => value);
+
+            charts.accidentType = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'מספר תאונות',
+                        data: values,
+                        backgroundColor: colors.primary
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // יצירת כל הגרפים
+        function createCharts(data) {
+            createSeverityChart(data);
+            createTrendChart(data);
+            createWeekdayChart(data);
+            createDayNightChart(data);
+            createRoadTypeChart(data);
+            createSpeedChart(data);
+            createRoadConditionChart(data);
+            createLightingChart(data);
+            createRoadSurfaceChart(data);
+            createAccidentTypeChart(data);
+        }
+
+        // עדכון הצגה
+        function updateDisplay() {
+            const filteredData = getFilteredData();
+            updateStats(filteredData);
+            createCharts(filteredData);
+        }
+
+        // עדכון פילטרים
+        function updateFilters(data) {
+            // עדכון אפשרויות סינון שנה
+            const years = [...new Set(data.map(a => a.shnat_teuna))].sort();
+            const yearFilter = document.getElementById('yearFilter');
+            yearFilter.innerHTML = '<option value="">כל השנים</option>';
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearFilter.appendChild(option);
+            });
+        }
+
+        // טעינת נתונים והצגתם
+        fetch('/api/accidents')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Data loaded:', data.length, 'records');
+                allData = data;
+                updateFilters(data);
+                updateDisplay();
+            })
+            .catch(error => {
+                console.error('Error loading data:', error);
+                alert('שגיאה בטעינת הנתונים: ' + error.message);
+                
+                // נסה לטעון נתונים לדוגמה במקום
+                loadSampleData();
+            });
+
+        // נתונים לדוגמה במקרה של שגיאה
+        function loadSampleData() {
+            allData = [
+                {
+                    "sug_dereh": 2,
+                    "semel_yishuv": 7400,
+                    "rehov1": 932.0,
+                    "shnat_teuna": 2022,
+                    "hodesh_teuna": 12,
+                    "yom_layla": 1,
+                    "yom_bashavua": 2,
+                    "humrat_teuna": 3,
+                    "longitude": 34.85410193,
+                    "latitude": 32.28774921222338,
+                    "street": "שלום עליכם"
+                },
+                {
+                    "sug_dereh": 1,
+                    "semel_yishuv": 7400,
+                    "rehov1": 850.0,
+                    "shnat_teuna": 2022,
+                    "hodesh_teuna": 11,
+                    "yom_layla": 2,
+                    "yom_bashavua": 5,
+                    "humrat_teuna": 1,
+                    "longitude": 34.85410193,
+                    "latitude": 32.28774921222338,
+                    "street": "הרצל"
+                },
+                {
+                    "sug_dereh": 3,
+                    "semel_yishuv": 7400,
+                    "rehov1": 750.0,
+                    "shnat_teuna": 2023,
+                    "hodesh_teuna": 1,
+                    "yom_layla": 1,
+                    "yom_bashavua": 1,
+                    "humrat_teuna": 2,
+                    "longitude": 34.85410193,
+                    "latitude": 32.28774921222338,
+                    "street": "בן גוריון"
+                }
+            ];
+            
+            console.log('Using sample data');
+            updateFilters(allData);
+            updateDisplay();
+        }
+
+        // הוספת מאזיני אירועים לפילטרים
+        document.getElementById('yearFilter').addEventListener('change', updateDisplay);
+        document.getElementById('severityFilter').addEventListener('change', updateDisplay);
+        document.getElementById('timeFilter').addEventListener('change', updateDisplay);
+    </script>
+</body>
+</html>

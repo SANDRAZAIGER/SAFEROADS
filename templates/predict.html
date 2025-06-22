@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SafeRoads - חיזוי חומרת תאונות דרכים">
+    <meta name="theme-color" content="#2563eb">
+    <title>SafeRoads - חיזוי תאונות</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>חיזוי חומרת תאונה</h1>
+            <p class="subtitle">הזן את פרטי התאונה לקבלת הערכת חומרה</p>
+        </header>
+
+        <main>
+            <form action="/result" method="POST" class="prediction-form" id="accidentForm">
+                <div class="form-group">
+                    <label for="sug_dereh">סוג דרך</label>
+                    <select name="sug_dereh" id="sug_dereh" required>
+                        <option value="" disabled selected>בחר סוג דרך</option>
+                        <option value="1">עירוני בצומת</option>
+                        <option value="2">עירוני לא בצומת</option>
+                        <option value="3">לא עירוני בצומת</option>
+                        <option value="4">לא עירוני לא בצומת</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="hodesh_teuna">חודש התאונה</label>
+                    <select name="hodesh_teuna" id="hodesh_teuna" required>
+                        <option value="" disabled selected>בחר חודש</option>
+                        {% for i in range(1,13) %}
+                        <option value="{{ i }}">{{ i }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="yom_layla">יום/לילה</label>
+                    <select name="yom_layla" id="yom_layla" required>
+                        <option value="" disabled selected>בחר זמן</option>
+                        <option value="1">יום</option>
+                        <option value="5">לילה</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="yom_bashavua">יום בשבוע</label>
+                    <select name="yom_bashavua" id="yom_bashavua" required>
+                        <option value="" disabled selected>בחר יום</option>
+                        {% for i in range(1,8) %}
+                        <option value="{{ i }}">{{ i }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="sug_teuna">סוג תאונה</label>
+                    <select name="sug_teuna" id="sug_teuna" required>
+                        <option value="" disabled selected>בחר סוג תאונה</option>
+                        <option value="1">פגיעה בהולך רגל</option>
+                        <option value="2">חזית אל צד</option>
+                        <option value="3">חזית באחור</option>
+                        <option value="5">חזית אל חזית</option>
+                        <option value="10">התהפכות</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="mehirut_muteret">מהירות מותרת</label>
+                    <select name="mehirut_muteret" id="mehirut_muteret" required>
+                        <option value="">בחר מהירות</option>
+                        <option value="1">עד 50 קמ"ש</option>
+                        <option value="2">60-51 קמ"ש</option>
+                        <option value="3">70-61 קמ"ש</option>
+                        <option value="4">80-71 קמ"ש</option>
+                        <option value="5">90-81 קמ"ש</option>
+                        <option value="6">100-91 קמ"ש</option>
+                        <option value="7">מעל 100 קמ"ש</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="mahoz">מחוז</label>
+                    <select name="mahoz" id="mahoz" required>
+                        <option value="">בחר מחוז</option>
+                        <option value="jerusalem">ירושלים</option>
+                        <option value="north">צפון</option>
+                        <option value="haifa">חיפה</option>
+                        <option value="central">מרכז</option>
+                        <option value="tel_aviv">תל אביב</option>
+                        <option value="south">דרום</option>
+                        <option value="judea_samaria">יהודה ושומרון</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="tkinut">תקינות הדרך</label>
+                    <select name="tkinut" id="tkinut" required>
+                        <option value="" disabled selected>בחר תקינות</option>
+                        <option value="1">אין ליקוי</option>
+                        <option value="2">שוליים גרועים</option>
+                        <option value="3">כביש משובש</option>
+                        <option value="4">שוליים גרועים בכביש משובש</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="simun_timrur">סימון/תמרור</label>
+                    <select name="simun_timrur" id="simun_timrur" required>
+                        <option value="" disabled selected>בחר סימון</option>
+                        <option value="1">סימון לקוי</option>
+                        <option value="2">תמרור לקוי</option>
+                        <option value="3">אין ליקוי</option>
+                        <option value="4">לא נדרש תמרור</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="teura">תאורה</label>
+                    <select name="teura" id="teura" required>
+                        <option value="" disabled selected>בחר תאורה</option>
+                        <option value="1">אור יום רגיל</option>
+                        <option value="2">ראות מוגבלת</option>
+                        <option value="3">לילה עם תאורה</option>
+                        <option value="5">לילה ללא תאורה</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="mezeg_avir">מזג אוויר</label>
+                    <select name="mezeg_avir" id="mezeg_avir" required>
+                        <option value="" disabled selected>בחר מזג אוויר</option>
+                        <option value="1">בהיר</option>
+                        <option value="2">גשום</option>
+                        <option value="3">שרבי</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="pne_kvish">פני כביש</label>
+                    <select name="pne_kvish" id="pne_kvish" required>
+                        <option value="" disabled selected>בחר מצב כביש</option>
+                        <option value="1">יבש</option>
+                        <option value="2">רטוב</option>
+                        <option value="3">מרוח בדלק</option>
+                        <option value="5">חול/חצץ</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="submit-button">
+                        <span class="button-text">חשב חיזוי</span>
+                        <span class="button-icon">➜</span>
+                    </button>
+                </div>
+            </form>
+        </main>
+
+        <div class="actions" style="margin-top: 2rem;">
+            <a href="/" class="back-button">
+                <span class="button-icon">←</span>
+                <span class="button-text">חזרה לדף הבית</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('accidentForm');
+            const button = form.querySelector('.submit-button');
+            const buttonText = button.querySelector('.button-text');
+            const formGroups = document.querySelectorAll('.form-group');
+
+            // Add animation classes to form groups
+            formGroups.forEach((group, index) => {
+                group.style.animationDelay = `${index * 0.1}s`;
+            });
+
+            // Form submission handling
+            form.addEventListener('submit', function(e) {
+                button.classList.add('loading');
+                buttonText.textContent = 'מחשב...';
+            });
+
+            // Form validation feedback
+            form.querySelectorAll('select').forEach(select => {
+                select.addEventListener('change', function() {
+                    if (this.value) {
+                        this.classList.add('valid');
+                    } else {
+                        this.classList.remove('valid');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 
