@@ -55,7 +55,7 @@
             padding: 0.75rem 1rem;
             background: var(--surface-color);
             border: 1px solid var(--primary-color);
-            color: var(--primary-color);
+            color: #000000 !important;
             border-radius: var(--border-radius);
             cursor: pointer;
             transition: var(--transition);
@@ -63,7 +63,7 @@
         }
         .map-button:hover {
             background: var(--primary-color);
-            color: white;
+            color: #000000 !important;
         }
         .legend {
             padding: 1rem;
@@ -159,9 +159,12 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>מפת תאונות דרכים בישראל</h1>
-            <p class="subtitle">צפיפות תאונות דרכים לפי אזור</p>
+        <header style="text-align: center; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <img src="/static/ChatGPT Image Aug 2, 2025 at 06_37_23 PM.png" alt="SafeRoads Logo" style="width: 130px; height: auto;">
+            </div>
+            <h1>מפת תאונות דרכים</h1>
+            <p class="subtitle">מפה אינטראקטיבית המציגה את פיזור התאונות ברחבי הארץ</p>
         </header>
 
         <main>
@@ -312,9 +315,9 @@
         function updateStats(data) {
             const stats = {
                 total: data.length,
-                light: data.filter(a => a.type === 'light').length,
-                severe: data.filter(a => a.type === 'severe').length,
-                fatal: data.filter(a => a.type === 'fatal').length
+                light: data.filter(a => a.humrat_teuna === 3).length,
+                severe: data.filter(a => a.humrat_teuna === 2).length,
+                fatal: data.filter(a => a.humrat_teuna === 1).length
             };
 
             document.getElementById('totalAccidents').textContent = stats.total.toLocaleString();
@@ -330,8 +333,8 @@
             }
 
             const heatData = filteredAccidents.map(point => [
-                point.lat,
-                point.lng,
+                point.latitude,
+                point.longitude,
                 1  // ערך קבוע לכל נקודה כדי למדוד רק צפיפות
             ]);
 
@@ -361,8 +364,8 @@
                     className: 'custom-div-icon',
                     html: `<div style="
                         background-color: ${
-                            point.type === 'fatal' ? '#ef4444' :
-                            point.type === 'severe' ? '#f59e0b' :
+                            point.humrat_teuna === 1 ? '#ef4444' :
+                            point.humrat_teuna === 2 ? '#f59e0b' :
                             '#10b981'
                         };
                         width: 8px;
@@ -373,16 +376,17 @@
                     iconSize: [8, 8]
                 });
 
-                L.marker([point.lat, point.lng], { icon })
+                L.marker([point.latitude, point.longitude], { icon })
                     .bindPopup(`
                         <div style="text-align: right; direction: rtl;">
                             <strong>פרטי התאונה:</strong><br>
                             סוג: ${
-                                point.type === 'fatal' ? 'קטלנית' :
-                                point.type === 'severe' ? 'קשה' : 'קלה'
+                                point.humrat_teuna === 1 ? 'קטלנית' :
+                                point.humrat_teuna === 2 ? 'קשה' : 'קלה'
                             }<br>
-                            תאריך: ${point.date || 'לא ידוע'}<br>
-                            ${point.details || ''}
+                            שנה: ${point.shnat_teuna || 'לא ידוע'}<br>
+                            חודש: ${point.hodesh_teuna || 'לא ידוע'}<br>
+                            ${point.street ? `רחוב: ${point.street}` : ''}
                         </div>
                     `)
                     .addTo(markersLayer);
@@ -396,10 +400,22 @@
             const time = document.getElementById('timeFilter').value;
 
             filteredAccidents = accidents.filter(accident => {
-                if (year && !accident.date.startsWith(year)) return false;
-                if (severity && accident.type !== severity) return false;
+                // Check year filter - use shnat_teuna if date doesn't exist
+                if (year) {
+                    const accidentYear = accident.date ? accident.date.split('-')[0] : accident.shnat_teuna;
+                    if (accidentYear != year) return false;
+                }
+                
+                // Check severity filter
+                if (severity) {
+                    const accidentSeverity = accident.humrat_teuna === 1 ? 'fatal' : 
+                                           accident.humrat_teuna === 2 ? 'severe' : 'light';
+                    if (accidentSeverity !== severity) return false;
+                }
+                
+                // Check time filter
                 if (time) {
-                    const isDay = accident.details.includes('זמן: יום');
+                    const isDay = accident.yom_layla === 1;
                     if (time === 'day' && !isDay) return false;
                     if (time === 'night' && isDay) return false;
                 }
@@ -434,8 +450,8 @@
                 accidents = data;
                 filteredAccidents = data;
 
-                // Update year filter options
-                const years = [...new Set(data.map(a => a.date.split('-')[0]))].sort();
+                // Update year filter options - use shnat_teuna if date doesn't exist
+                const years = [...new Set(data.map(a => a.date ? a.date.split('-')[0] : a.shnat_teuna))].sort();
                 const yearFilter = document.getElementById('yearFilter');
                 years.forEach(year => {
                     const option = document.createElement('option');

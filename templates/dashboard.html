@@ -14,6 +14,9 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        body {
+            color: #000000 !important;
+        }
         .dashboard-container {
             padding: 2rem;
             max-width: 2000px;
@@ -36,7 +39,7 @@
         }
         .chart-title {
             font-size: 1.4rem;
-            color: var(--text-primary);
+            color: #000000 !important;
             margin-bottom: 1.5rem;
             text-align: center;
             font-weight: 600;
@@ -69,7 +72,7 @@
             margin: 0.5rem 0;
         }
         .stat-label {
-            color: var(--text-secondary);
+            color: #000000 !important;
             font-size: 0.9rem;
         }
         .filters {
@@ -89,7 +92,7 @@
         .filter-group label {
             display: block;
             margin-bottom: 0.5rem;
-            color: var(--text-secondary);
+            color: #000000 !important;
         }
         .filter-group select {
             width: 100%;
@@ -98,11 +101,18 @@
             border-radius: var(--border-radius);
             font-size: 1rem;
         }
+        /* Ensure all text is black */
+        h1, h2, h3, p, label, span, div {
+            color: #000000 !important;
+        }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <header>
+        <header style="text-align: center; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <img src="/static/ChatGPT Image Aug 2, 2025 at 06_37_23 PM.png" alt="SafeRoads Logo" style="width: 150px; height: auto;">
+            </div>
             <h1>דשבורד נתוני תאונות דרכים</h1>
             <p class="subtitle">ניתוח וויזואליזציה של נתוני תאונות דרכים בישראל</p>
         </header>
@@ -184,12 +194,6 @@
                 </div>
             </div>
             <div class="chart-container">
-                <h3 class="chart-title">התפלגות תאונות לפי מהירות מותרת</h3>
-                <div class="chart-wrapper">
-                    <canvas id="speedChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-container">
                 <h3 class="chart-title">התפלגות תאונות לפי תחזוקת הכביש</h3>
                 <div class="chart-wrapper">
                     <canvas id="roadConditionChart"></canvas>
@@ -246,11 +250,12 @@
 
         // עדכון סטטיסטיקות
         function updateStats(data) {
-            document.getElementById('totalAccidents').textContent = data.length;
-            document.getElementById('fatalAccidents').textContent = data.filter(a => a.humrat_teuna === 1).length;
-            document.getElementById('severeAccidents').textContent = data.filter(a => a.humrat_teuna === 2).length;
-            document.getElementById('lightAccidents').textContent = data.filter(a => a.humrat_teuna === 3).length;
-        }
+    document.getElementById('totalAccidents').textContent = data.length.toLocaleString();
+    document.getElementById('fatalAccidents').textContent = data.filter(a => a.humrat_teuna === 1).length.toLocaleString();
+    document.getElementById('severeAccidents').textContent = data.filter(a => a.humrat_teuna === 2).length.toLocaleString();
+    document.getElementById('lightAccidents').textContent = data.filter(a => a.humrat_teuna === 3).length.toLocaleString();
+}
+
 
         // קבלת נתונים מסוננים
         function getFilteredData() {
@@ -416,7 +421,8 @@
                     labels: ['יום', 'לילה'],
                     datasets: [{
                         data: [dayNightCounts[1], dayNightCounts[5]],
-                        backgroundColor: ['#fbbf24', '#1e293b']
+                        backgroundColor: [colors.light, colors.primary]
+
                     }]
                 },
                 options: {
@@ -511,43 +517,31 @@
             const values = Object.values(roadTypeCounts);
 
             charts.roadType = new Chart(ctx, {
-                type: 'pie',
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
+                        label: 'מספר תאונות',
                         data: values,
                         backgroundColor: [
                             colors.primary,
                             colors.secondary,
                             colors.fatal,
-                            colors.severe
+                            colors.severe,
+                            colors.light
                         ]
                     }]
                 },
                 options: {
                     responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
+                    scales: {
+                        y: {
+                            beginAtZero: true
                         }
                     }
                 }
             });
         }
-
-        // מיפוי מהירות מותרת
-        const speedMapping = {
-            1: '30 קמ\"ש',
-            2: '50 קמ\"ש',
-            3: '60 קמ\"ש',
-            4: '70 קמ\"ש',
-            5: '80 קמ\"ש',
-            6: '90 קמ\"ש',
-            7: '100 קמ\"ש',
-            8: '110 קמ\"ש',
-            9: '120 קמ\"ש',
-            99: 'לא ידוע'
-        };
 
         // מיפוי תחזוקת כביש (tkinut)
         const roadConditionMapping = {
@@ -621,11 +615,10 @@
             const values = sortedCategories.map(([,value]) => value);
 
             charts.roadCondition = new Chart(ctx, {
-                type: 'bar',
+                type: 'doughnut',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'מספר תאונות',
                         data: values,
                         backgroundColor: [
                             colors.light,
@@ -639,9 +632,9 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
                         }
                     }
                 }
@@ -675,10 +668,11 @@
             const values = sortedCategories.map(([,value]) => value);
 
             charts.lighting = new Chart(ctx, {
-                type: 'doughnut',
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
+                        label: 'מספר תאונות',
                         data: values,
                         backgroundColor: [
                             colors.light,
@@ -692,9 +686,9 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
+                    scales: {
+                        y: {
+                            beginAtZero: true
                         }
                     }
                 }
@@ -754,53 +748,6 @@
             });
         }
 
-        // יצירת גרף מהירות מותרת
-        function createSpeedChart(data) {
-            const ctx = document.getElementById('speedChart').getContext('2d');
-            
-            if (charts.speed) {
-                charts.speed.destroy();
-            }
-
-            const speedCounts = {};
-            data.forEach(accident => {
-                const speed = parseInt(accident.mehirut_muteret); // ננסה להמיר למספר שלם
-                if (isNaN(speed) || !speedMapping.hasOwnProperty(speed)) {
-                    speedCounts[99] = (speedCounts[99] || 0) + 1; // קבץ את כל הלא ידוע תחת 99
-                } else {
-                    speedCounts[speed] = (speedCounts[speed] || 0) + 1;
-                }
-            });
-
-            const sortedCategories = Object.entries(speedCounts)
-                .sort(([,a], [,b]) => b - a)
-                .filter(([key, value]) => value > 0); 
-
-            const labels = sortedCategories.map(([key]) => speedMapping[key] || 'לא ידוע');
-            const values = sortedCategories.map(([,value]) => value);
-
-            charts.speed = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'מספר תאונות',
-                        data: values,
-                        backgroundColor: colors.primary
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-
         // יצירת גרף סוג תאונה
         function createAccidentTypeChart(data) {
             const ctx = document.getElementById('accidentTypeChart').getContext('2d');
@@ -839,8 +786,9 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    indexAxis: 'y',
                     scales: {
-                        y: {
+                        x: {
                             beginAtZero: true
                         }
                     }
@@ -855,7 +803,6 @@
             createWeekdayChart(data);
             createDayNightChart(data);
             createRoadTypeChart(data);
-            createSpeedChart(data);
             createRoadConditionChart(data);
             createLightingChart(data);
             createRoadSurfaceChart(data);

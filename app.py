@@ -239,7 +239,20 @@ def result():
                                 prob_kashe=probs[1] * 100,
                                 prob_katlani=probs[0] * 100,
                                 district=form_data['mahoz'],
-                                recommendations=recommendations)
+                                recommendations=recommendations,
+                                # הוספת פרמטרי הטופס
+                                sug_dereh=form_data['sug_dereh'],
+                                hodesh_teuna=form_data['hodesh_teuna'],
+                                yom_layla=form_data['yom_layla'],
+                                yom_bashavua=form_data['yom_bashavua'],
+                                sug_teuna=form_data['sug_teuna'],
+                                mehirut_muteret=form_data['mehirut_muteret'],
+                                mahoz=form_data['mahoz'],
+                                tkinut=form_data['tkinut'],
+                                simun_timrur=form_data['simun_timrur'],
+                                teura=form_data['teura'],
+                                mezeg_avir=form_data['mezeg_avir'],
+                                pne_kvish=form_data['pne_kvish'])
                                 
         except Exception as e:
             print(f"שגיאה בעיבוד הבקשה: {str(e)}")
@@ -248,11 +261,25 @@ def result():
     elif request.method == 'GET':
         # בדיקה אם יש נתונים שמורים ב-session
         if 'prediction_results' in session and 'metrics' in session:
+            form_data = session.get('form_data', {})
             return render_template('result.html',
                                 **session['prediction_results'],
                                 **session['metrics'],
-                                district=session.get('form_data', {}).get('mahoz', ''),
-                                recommendations=session.get('recommendations', []))
+                                district=form_data.get('mahoz', ''),
+                                recommendations=session.get('recommendations', []),
+                                # הוספת פרמטרי הטופס
+                                sug_dereh=form_data.get('sug_dereh', 0),
+                                hodesh_teuna=form_data.get('hodesh_teuna', 0),
+                                yom_layla=form_data.get('yom_layla', 0),
+                                yom_bashavua=form_data.get('yom_bashavua', 0),
+                                sug_teuna=form_data.get('sug_teuna', 0),
+                                mehirut_muteret=form_data.get('mehirut_muteret', 0),
+                                mahoz=form_data.get('mahoz', ''),
+                                tkinut=form_data.get('tkinut', 0),
+                                simun_timrur=form_data.get('simun_timrur', 0),
+                                teura=form_data.get('teura', 0),
+                                mezeg_avir=form_data.get('mezeg_avir', 0),
+                                pne_kvish=form_data.get('pne_kvish', 0))
         else:
             return redirect(url_for('index'))
 

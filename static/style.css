@@ -155,7 +155,7 @@
 
         .submit-button {
             background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-            color: #1e293b;
+            color: #000000 !important;
             border: none;
             border-radius: var(--border-radius);
             padding: 1rem 3rem;
@@ -186,21 +186,24 @@
         .submit-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px -10px rgba(37, 99, 235, 0.5);
-            color: #1e293b;
+            color: #000000 !important;
         }
 
         .button-text, .button-icon {
             position: relative;
             z-index: 1;
+            color: #000000 !important;
         }
 
         .button-icon {
             font-size: 1.2rem;
             transition: var(--transition);
+            color: #000000 !important;
         }
 
         .submit-button:hover .button-icon {
             transform: translateX(-5px);
+            color: #000000 !important;
         }
 
         /* Loading State */
@@ -210,6 +213,7 @@
 
         .submit-button.loading .button-text {
             opacity: 0.7;
+            color: #000000 !important;
         }
 
         .submit-button.loading::after {
@@ -220,7 +224,7 @@
             top: 50%;
             right: 1.5rem;
             transform: translateY(-50%);
-            border: 2px solid white;
+            border: 2px solid #000000;
             border-radius: 50%;
             border-left-color: transparent;
             animation: spin 1s linear infinite;
@@ -442,7 +446,7 @@
             gap: 0.5rem;
             padding: 0.75rem 1.5rem;
             background: #f8fafc;
-            color: var(--text-primary);
+            color: #000000 !important;
             border-radius: var(--border-radius);
             text-decoration: none;
             font-weight: 500;
@@ -452,10 +456,12 @@
         .back-button:hover {
             background: #f1f5f9;
             transform: translateX(-2px);
+            color: #000000 !important;
         }
 
         .back-button .button-icon {
             font-size: 1.2rem;
+            color: #000000 !important;
         }
 
         /* Responsive Design for Results */
@@ -555,7 +561,7 @@
                 </select>
             </div>
         </div>
-        <button type="submit" class="mt-6 w-full bg-gradient-to-r from-[var(--secondary-color)] to-[var(--accent-color)] text-white font-medium py-3 rounded-lg hover:from-[var(--primary-color)] hover:to-[var(--secondary-color)] transition-all transform hover:-translate-y-1 active:translate-y-0">שלח</button>
+        <button type="submit" class="mt-6 w-full bg-gradient-to-r from-[var(--secondary-color)] to-[var(--accent-color)] text-black font-medium py-3 rounded-lg hover:from-[var(--primary-color)] hover:to-[var(--secondary-color)] transition-all transform hover:-translate-y-1 active:translate-y-0">שלח</button>
         <div class="prediction hidden">
             <h2 class="text-xl font-semibold text-[var(--primary-color)]">תוצאה</h2>
             <p>התוצאה תוצג כאן לאחר השליחה</p>

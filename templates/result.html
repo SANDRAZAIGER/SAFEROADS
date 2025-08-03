@@ -13,6 +13,9 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        body {
+            color: #000000;
+        }
         .results-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -20,8 +23,8 @@
         }
         .results-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
             margin-top: 2rem;
         }
         .result-card {
@@ -29,16 +32,21 @@
             padding: 2rem;
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
+            color: #000000;
         }
         .prediction {
             text-align: center;
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            color: #000000 !important;
+        }
+        .prediction h2 {
+            color: #000000 !important;
         }
         .prediction-value {
             font-size: 2.5rem;
             font-weight: bold;
             margin: 1.5rem 0;
-            color: var(--primary-color);
+            color: #000000 !important;
         }
         .prediction-probabilities {
             margin-top: 2rem;
@@ -51,7 +59,7 @@
             height: 2rem;
             border-radius: 1rem;
             position: relative;
-            color: white;
+            color: #000000 !important;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -81,19 +89,22 @@
             padding: 0.75rem;
             text-align: center;
             border: 1px solid var(--border-color);
+            color: #000000;
         }
         .confusion-matrix th {
             background: var(--surface-color);
             font-weight: 500;
+            color: #000000;
         }
         .confusion-matrix td.correct {
             background: rgba(16, 185, 129, 0.1);
             font-weight: bold;
+            color: #000000;
         }
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.75rem;
             margin-top: 1rem;
         }
         .metric {
@@ -101,10 +112,11 @@
             padding: 1rem;
             background: var(--surface-color);
             border-radius: var(--border-radius);
+            color: #000000;
         }
         .metric-label {
             font-size: 0.9rem;
-            color: var(--text-secondary);
+            color: #000000;
             margin-bottom: 0.5rem;
             display: block;
         }
@@ -133,21 +145,46 @@
         }
         .action-button {
             background: var(--primary-color);
-            color: white;
+            color: #000000 !important;
         }
         .back-button {
             background: var(--surface-color);
-            color: var(--text-primary);
+            color: #000000 !important;
         }
         .action-button:hover, .back-button:hover {
             transform: translateY(-2px);
+            color: #000000 !important;
         }
         .button-icon {
             font-size: 1.2rem;
+            color: #000000 !important;
+        }
+        .parameters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .parameter-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--surface-color);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+        }
+        .parameter-label {
+            font-weight: 500;
+            color: #000000;
+        }
+        .parameter-value {
+            font-weight: 600;
+            color: var(--primary-color);
         }
     </style>
 </head>
-<body>
+<body style="color: #000000;">
     <div class="results-container">
         <header>
             <h1>תוצאות החיזוי</h1>
@@ -155,120 +192,251 @@
         </header>
 
         <main>
-            <div class="results-grid">
-                <!-- Prediction Result -->
-                <div class="result-card prediction">
-                    <h2>תוצאת החיזוי</h2>
-                    <div class="prediction-value">
-                        {{ prediction_text }}
-                    </div>
-                    <div class="prediction-probabilities">
-                        <div class="prob-item">
-                            <div class="prob-bar" data-severity="light" style="width: {{ prob_kala }}%">
-                                <span class="prob-label">קלה</span>
-                                <span class="prob-value">{{ "%.1f"|format(prob_kala) }}%</span>
-                            </div>
+            <div style="display: grid; grid-template-columns: 1fr 300px; gap: 2rem; align-items: start;">
+                <!-- Main Content -->
+                <div class="results-grid" style="grid-template-columns: 1fr;">
+                    <!-- Prediction Result -->
+                    <div class="result-card prediction">
+                        <h2>תוצאת החיזוי</h2>
+                        <div class="prediction-value" style="color: #000000 !important;">
+                            {{ prediction_text }}
                         </div>
-                        <div class="prob-item">
-                            <div class="prob-bar" data-severity="severe" style="width: {{ prob_kashe }}%">
-                                <span class="prob-label">קשה</span>
-                                <span class="prob-value">{{ "%.1f"|format(prob_kashe) }}%</span>
-                            </div>
-                        </div>
-                        <div class="prob-item">
-                            <div class="prob-bar" data-severity="fatal" style="width: {{ prob_katlani }}%">
-                                <span class="prob-label">קטלנית</span>
-                                <span class="prob-value">{{ "%.1f"|format(prob_katlani) }}%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Model Metrics -->
-                <div class="result-card metrics">
-                    <h2>מדדי הערכה</h2>
-                    <div class="metrics-grid">
-                        <div class="metric">
-                            <span class="metric-label">דיוק (Accuracy)</span>
-                            <span class="metric-value">{{ "%.1f"|format(accuracy * 100) }}%</span>
-                        </div>
-                        <div class="metric">
-                            <span class="metric-label">דיוק (Precision)</span>
-                            <span class="metric-value">{{ "%.1f"|format(precision * 100) }}%</span>
-                        </div>
-                        <div class="metric">
-                            <span class="metric-label">רגישות (Recall)</span>
-                            <span class="metric-value">{{ "%.1f"|format(recall * 100) }}%</span>
-                        </div>
-                        <div class="metric">
-                            <span class="metric-label">F1 Score</span>
-                            <span class="metric-value">{{ "%.1f"|format(f1_score * 100) }}%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recommendations -->
-                <div class="result-card recommendations">
-                    <h2>המלצות בטיחות</h2>
-                    <div class="recommendations-list">
-                        {% if recommendations %}
-                            {% for rec in recommendations %}
-                                <div class="recommendation-item {{ rec.type }}">
-                                    <div class="recommendation-icon">
-                                        {% if rec.type == 'high_severity' %}🚨
-                                        {% elif rec.type == 'infrastructure' %}🚧
-                                        {% elif rec.type == 'signage' %}🚸
-                                        {% elif rec.type == 'lighting' %}💡
-                                        {% elif rec.type == 'prediction_based' %}⚠️
-                                        {% endif %}
-                                    </div>
-                                    <div class="recommendation-text">
-                                        {{ rec.text }}
-                                    </div>
+                        <div class="prediction-probabilities">
+                            <div class="prob-item">
+                                <div class="prob-bar" data-severity="light" style="width: {{ prob_kala }}%">
+                                    <span class="prob-label">קלה</span>
+                                    <span class="prob-value">{{ "%.1f"|format(prob_kala) }}%</span>
                                 </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="no-recommendations">
-                                לא נמצאו המלצות ספציפיות לתנאים שהוזנו
                             </div>
-                        {% endif %}
+                            <div class="prob-item">
+                                <div class="prob-bar" data-severity="severe" style="width: {{ prob_kashe }}%">
+                                    <span class="prob-label">קשה</span>
+                                    <span class="prob-value">{{ "%.1f"|format(prob_kashe) }}%</span>
+                                </div>
+                            </div>
+                            <div class="prob-item">
+                                <div class="prob-bar" data-severity="fatal" style="width: {{ prob_katlani }}%">
+                                    <span class="prob-label">קטלנית</span>
+                                    <span class="prob-value">{{ "%.1f"|format(prob_katlani) }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Model Metrics -->
+                    <div class="result-card metrics">
+                        <h2>מדדי הערכה</h2>
+                        <div class="metrics-grid">
+                            <div class="metric">
+                                <span class="metric-label">דיוק (Accuracy)</span>
+                                <span class="metric-value">{{ "%.1f"|format(accuracy * 100) }}%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">דיוק (Precision)</span>
+                                <span class="metric-value">{{ "%.1f"|format(precision * 100) }}%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">רגישות (Recall)</span>
+                                <span class="metric-value">{{ "%.1f"|format(recall * 100) }}%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">F1 Score</span>
+                                <span class="metric-value">{{ "%.1f"|format(f1_score * 100) }}%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommendations -->
+                    <div class="result-card recommendations">
+                        <h2>המלצות בטיחות</h2>
+                        <div class="recommendations-list">
+                            {% if recommendations %}
+                                {% for rec in recommendations %}
+                                    <div class="recommendation-item {{ rec.type }}">
+                                        <div class="recommendation-icon">
+                                            {% if rec.type == 'high_severity' %}🚨
+                                            {% elif rec.type == 'infrastructure' %}🚧
+                                            {% elif rec.type == 'signage' %}🚸
+                                            {% elif rec.type == 'lighting' %}💡
+                                            {% elif rec.type == 'prediction_based' %}⚠️
+                                            {% endif %}
+                                        </div>
+                                        <div class="recommendation-text">
+                                            {{ rec.text }}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="no-recommendations">
+                                    לא נמצאו המלצות ספציפיות לתנאים שהוזנו
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Confusion Matrix -->
+                    <div class="result-card matrix">
+                        <h2>מטריצת בלבול</h2>
+                        <div class="confusion-matrix">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>חזוי: קל</th>
+                                        <th>חזוי: בינוני</th>
+                                        <th>חזוי: קשה</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th>אמיתי: קל</th>
+                                        <td class="correct">{{ confusion_matrix[0][0] }}</td>
+                                        <td>{{ confusion_matrix[0][1] }}</td>
+                                        <td>{{ confusion_matrix[0][2] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>אמיתי: בינוני</th>
+                                        <td>{{ confusion_matrix[1][0] }}</td>
+                                        <td class="correct">{{ confusion_matrix[1][1] }}</td>
+                                        <td>{{ confusion_matrix[1][2] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>אמיתי: קשה</th>
+                                        <td>{{ confusion_matrix[2][0] }}</td>
+                                        <td>{{ confusion_matrix[2][1] }}</td>
+                                        <td class="correct">{{ confusion_matrix[2][2] }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Confusion Matrix -->
-                <div class="result-card matrix">
-                    <h2>מטריצת בלבול</h2>
-                    <div class="confusion-matrix">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>חזוי: קל</th>
-                                    <th>חזוי: בינוני</th>
-                                    <th>חזוי: קשה</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <th>אמיתי: קל</th>
-                                    <td class="correct">{{ confusion_matrix[0][0] }}</td>
-                                    <td>{{ confusion_matrix[0][1] }}</td>
-                                    <td>{{ confusion_matrix[0][2] }}</td>
-                                </tr>
-                                <tr>
-                                    <th>אמיתי: בינוני</th>
-                                    <td>{{ confusion_matrix[1][0] }}</td>
-                                    <td class="correct">{{ confusion_matrix[1][1] }}</td>
-                                    <td>{{ confusion_matrix[1][2] }}</td>
-                                </tr>
-                                <tr>
-                                    <th>אמיתי: קשה</th>
-                                    <td>{{ confusion_matrix[2][0] }}</td>
-                                    <td>{{ confusion_matrix[2][1] }}</td>
-                                    <td class="correct">{{ confusion_matrix[2][2] }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                <!-- Sidebar - Input Parameters -->
+                <div class="result-card parameters" style="position: sticky; top: 2rem;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">הפרמטרים שהוזנו</h3>
+                    <div class="parameters-grid" style="grid-template-columns: 1fr; gap: 0.5rem;">
+                        <div class="parameter-item" style="padding: 0.5rem; font-size: 0.9rem;">
+                            <span class="parameter-label">סוג דרך:</span>
+                            <span class="parameter-value">
+                                {% if sug_dereh == 1 %}עירוני בצומת
+                                {% elif sug_dereh == 2 %}עירוני לא בצומת
+                                {% elif sug_dereh == 3 %}לא עירוני בצומת
+                                {% elif sug_dereh == 4 %}לא עירוני לא בצומת
+                                {% else %}לא ידוע{% endif %}
+                            </span>
+                        </div>
+                        <div class="parameter-item" style="padding: 0.5rem; font-size: 0.9rem;">
+                            <span class="parameter-label">חודש:</span>
+                            <span class="parameter-value">{{ hodesh_teuna }}</span>
+                        </div>
+                        <div class="parameter-item" style="padding: 0.5rem; font-size: 0.9rem;">
+                            <span class="parameter-label">זמן ביממה:</span>
+                            <span class="parameter-value">
+                                {% if yom_layla == 1 %}יום
+                                {% elif yom_layla == 5 %}לילה
+                                {% else %}לא ידוע{% endif %}
+                            </span>
+                        </div>
+                        <div class="parameter-item" style="padding: 0.5rem; font-size: 0.9rem;">
+                            <span class="parameter-label">יום בשבוע:</span>
+                            <span class="parameter-value">
+                                {% if yom_bashavua == 1 %}ראשון
+                                {% elif yom_bashavua == 2 %}שני
+                                {% elif yom_bashavua == 3 %}שלישי
+                                {% elif yom_bashavua == 4 %}רביעי
+                                {% elif yom_bashavua == 5 %}חמישי
+                                {% elif yom_bashavua == 6 %}שישי
+                                {% elif yom_bashavua == 7 %}שבת
+                                {% else %}לא ידוע{% endif %}
+                            </span>
+                        </div>
+                        <div class="parameter-item" style="padding: 0.5rem; font-size: 0.9rem;">
+                            <span class="parameter-label">סוג תאונה:</span>
+                            <span class="parameter-value">
+                                {% if sug_teuna == 1 %}פגיעה בהולך רגל
+                                {% elif sug_teuna == 2 %}חזית אל צד
+                                {% elif sug_teuna == 3 %}חזית באחור
+                                {% elif sug_teuna == 5 %}חזית אל חזית
+                                {% elif sug_teuna == 10 %}התהפכות
+                                {% else %}לא ידוע{% endif %}
+                            </span>
+                        </div>
+                        <div class="parameter-item" style="padding: 0.5rem; font-size: 0.9rem;">
+                            <span class="parameter-label">מהירות מותרת:</span>
+                            <span class="parameter-value">
+                                {% if mehirut_muteret == 1 %}עד 50 קמ"ש
+                                {% elif mehirut_muteret == 2 %}60-51 קמ"ש
+                                {% elif mehirut_muteret == 3 %}70-61 קמ"ש
+                                {% elif mehirut_muteret == 4 %}80-71 קמ"ש
+                                {% elif mehirut_muteret == 5 %}90-81 קמ"ש
+                                {% elif mehirut_muteret == 6 %}100-91 קמ"ש
+                                {% elif mehirut_muteret == 7 %}מעל 100 קמ"ש
+                                {% else %}לא ידוע{% endif %}
+                            </span>
+                        </div>
+                        <div class="parameter-item" style="padding: 0.5rem; font-size: 0.9rem;">
+                            <span class="parameter-label">מחוז:</span>
+                            <span class="parameter-value">
+                                {% if mahoz == 'jerusalem' %}ירושלים
+                                {% elif mahoz == 'north' %}צפון
+                                {% elif mahoz == 'haifa' %}חיפה
+                                {% elif mahoz == 'central' %}מרכז
+                                {% elif mahoz == 'tel_aviv' %}תל אביב
+                                {% elif mahoz == 'south' %}דרום
+                                {% elif mahoz == 'judea_samaria' %}יהודה ושומרון
+                                {% else %}לא ידוע{% endif %}
+                            </span>
+                        </div>
+                        <div class="parameter-item" style="padding: 0.5rem; font-size: 0.9rem;">
+                            <span class="parameter-label">תקינות הדרך:</span>
+                            <span class="parameter-value">
+                                {% if tkinut == 1 %}אין ליקוי
+                                {% elif tkinut == 2 %}שוליים גרועים
+                                {% elif tkinut == 3 %}כביש משובש
+                                {% elif tkinut == 4 %}שוליים גרועים בכביש משובש
+                                {% else %}לא ידוע{% endif %}
+                            </span>
+                        </div>
+                        <div class="parameter-item" style="padding: 0.5rem; font-size: 0.9rem;">
+                            <span class="parameter-label">סימון/תמרור:</span>
+                            <span class="parameter-value">
+                                {% if simun_timrur == 1 %}סימון לקוי
+                                {% elif simun_timrur == 2 %}תמרור לקוי
+                                {% elif simun_timrur == 3 %}אין ליקוי
+                                {% elif simun_timrur == 4 %}לא נדרש תמרור
+                                {% else %}לא ידוע{% endif %}
+                            </span>
+                        </div>
+                        <div class="parameter-item" style="padding: 0.5rem; font-size: 0.9rem;">
+                            <span class="parameter-label">תאורה:</span>
+                            <span class="parameter-value">
+                                {% if teura == 1 %}אור יום רגיל
+                                {% elif teura == 2 %}ראות מוגבלת
+                                {% elif teura == 3 %}לילה עם תאורה
+                                {% elif teura == 5 %}לילה ללא תאורה
+                                {% else %}לא ידוע{% endif %}
+                            </span>
+                        </div>
+                        <div class="parameter-item" style="padding: 0.5rem; font-size: 0.9rem;">
+                            <span class="parameter-label">מזג אוויר:</span>
+                            <span class="parameter-value">
+                                {% if mezeg_avir == 1 %}בהיר
+                                {% elif mezeg_avir == 2 %}גשום
+                                {% elif mezeg_avir == 3 %}שרבי
+                                {% else %}לא ידוע{% endif %}
+                            </span>
+                        </div>
+                        <div class="parameter-item" style="padding: 0.5rem; font-size: 0.9rem;">
+                            <span class="parameter-label">פני כביש:</span>
+                            <span class="parameter-value">
+                                {% if pne_kvish == 1 %}יבש
+                                {% elif pne_kvish == 2 %}רטוב
+                                {% elif pne_kvish == 3 %}מרוח בדלק
+                                {% elif pne_kvish == 5 %}חול/חצץ
+                                {% else %}לא ידוע{% endif %}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -11,10 +11,69 @@
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <style>
+        body {
+            color: #000000 !important;
+        }
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        .submit-button, .auto-generate-button {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .submit-button {
+            background: var(--primary-color);
+            color: #000000 !important;
+        }
+        .auto-generate-button {
+            background: var(--surface-color);
+            color: #000000 !important;
+            border: 2px solid var(--primary-color);
+        }
+        .submit-button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            color: #000000 !important;
+        }
+        .auto-generate-button:hover {
+            background: var(--primary-color);
+            color: #000000 !important;
+            transform: translateY(-2px);
+        }
+        /* Ensure all text is black */
+        h1, h2, h3, p, label, span, div {
+            color: #000000 !important;
+        }
+        /* Keep black text in buttons */
+        .submit-button, .submit-button * {
+            color: #000000 !important;
+        }
+        .auto-generate-button, .auto-generate-button * {
+            color: #000000 !important;
+        }
+        .auto-generate-button:hover, .auto-generate-button:hover * {
+            color: #000000 !important;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <header>
+        <header style="text-align: center; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <img src="/static/ChatGPT Image Aug 2, 2025 at 06_37_23 PM.png" alt="SafeRoads Logo" style="width: 130px; height: auto;">
+            </div>
             <h1>חיזוי חומרת תאונה</h1>
             <p class="subtitle">הזן את פרטי התאונה לקבלת הערכת חומרה</p>
         </header>
@@ -156,6 +215,10 @@
                 </div>
 
                 <div class="form-actions">
+                    <button type="button" class="auto-generate-button" onclick="generateRandomData()">
+                        <span class="button-icon">🎲</span>
+                        <span class="button-text">הגרל אוטומטית</span>
+                    </button>
                     <button type="submit" class="submit-button">
                         <span class="button-text">חשב חיזוי</span>
                         <span class="button-icon">➜</span>
@@ -201,6 +264,53 @@
                 });
             });
         });
+
+        // Function to generate random data
+        function generateRandomData() {
+            const form = document.getElementById('accidentForm');
+            
+            // Random values for each field
+            const randomData = {
+                'sug_dereh': Math.floor(Math.random() * 4) + 1,
+                'hodesh_teuna': Math.floor(Math.random() * 12) + 1,
+                'yom_layla': Math.random() < 0.5 ? 1 : 5, // 1=יום, 5=לילה
+                'yom_bashavua': Math.floor(Math.random() * 7) + 1,
+                'sug_teuna': [1, 2, 3, 5, 10][Math.floor(Math.random() * 5)],
+                'mehirut_muteret': Math.floor(Math.random() * 7) + 1,
+                'mahoz': ['jerusalem', 'north', 'haifa', 'central', 'tel_aviv', 'south', 'judea_samaria'][Math.floor(Math.random() * 7)],
+                'tkinut': Math.floor(Math.random() * 4) + 1,
+                'simun_timrur': Math.floor(Math.random() * 4) + 1,
+                'teura': [1, 2, 3, 5][Math.floor(Math.random() * 4)],
+                'mezeg_avir': Math.floor(Math.random() * 3) + 1,
+                'pne_kvish': [1, 2, 3, 5][Math.floor(Math.random() * 4)]
+            };
+
+            // Fill all form fields with random data
+            Object.keys(randomData).forEach(fieldName => {
+                const select = form.querySelector(`[name="${fieldName}"]`);
+                if (select) {
+                    select.value = randomData[fieldName];
+                    select.classList.add('valid');
+                    
+                    // Trigger change event to update visual feedback
+                    const event = new Event('change', { bubbles: true });
+                    select.dispatchEvent(event);
+                }
+            });
+
+            // Show success message
+            const autoButton = document.querySelector('.auto-generate-button');
+            const originalText = autoButton.querySelector('.button-text').textContent;
+            autoButton.querySelector('.button-text').textContent = 'הוגרל בהצלחה!';
+            autoButton.style.background = '#10b981';
+            autoButton.style.color = '#000000';
+            
+            setTimeout(() => {
+                autoButton.querySelector('.button-text').textContent = originalText;
+                autoButton.style.background = '';
+                autoButton.style.color = '';
+            }, 2000);
+        }
     </script>
 </body>
 </html> 
